@@ -62,6 +62,7 @@ class CNN(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)  # 2x2 最大池化
 
         # 自适应平均池化，把任意输入尺寸变成固定 4x4 尺寸
+        # AdaptivePooling，自适应池化层。函数通过输入原始尺寸和目标尺寸，自适应地计算核的大小和每次移动的步长。如告诉函数原来的矩阵是7x7的尺寸，我要得到3x1的尺寸，函数就会自己计算出核多大、该怎么运动。
         self.avgpool = nn.AdaptiveAvgPool2d((4, 4))
 
         # 全连接层
@@ -70,14 +71,20 @@ class CNN(nn.Module):
 
     def forward(self, x):
         # 前向传播过程
-        x = nn.functional.relu(self.conv1(x))
+        x = nn.functional.relu(self.conv1(x)) # 非线性激活函数，改变其数值，不改变维度
         x = self.pool(x)
+
         x = nn.functional.relu(self.conv2(x))
         x = self.pool(x)
-        x = nn.functional.relu(self.conv3(x))
+
+        x = nn.functional.relu(self.conv3(x)) # 到这里，channel是128
         x = self.pool(x)
+
         x = self.avgpool(x)        # 保证无论输入多大，最后都是 4x4
+
         x = torch.flatten(x, 1)    # 展平成一维向量，dim=1 表示从第二维开始展平
+        # or x = x.view(-1, 128 * 4 * 4) # 从第二维开始展平
+
         x = nn.functional.relu(self.fc1(x))
         x = self.fc2(x)
         return x
